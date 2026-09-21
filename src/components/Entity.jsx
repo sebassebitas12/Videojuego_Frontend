@@ -1,1 +1,9 @@
-export default function Entity({type,label}){const symbols={player:'P',enemy:'E',key:'K',exit:'X'};return <span className={'entity entity-'+type} aria-label={label}>{symbols[type]}</span>}
+export default function Entity({ type, direction = 'down', label }) {
+  return (
+    <span className={'entity entity-' + type + ' facing-' + direction} aria-label={label} title={label}>
+      <span className="entity-shadow" />
+      <span className="entity-body" />
+      <span className="entity-core" />
+    </span>
+  )
+}
