@@ -1,0 +1,1 @@
+export default function Entity({type,label}){const symbols={player:'P',enemy:'E',key:'K',exit:'X'};return <span className={'entity entity-'+type} aria-label={label}>{symbols[type]}</span>}
