@@ -1,0 +1,5 @@
+import {useEffect,useState} from 'react'
+import LeaderboardRow from '../components/LeaderboardRow'
+import Button from '../components/Button'
+import {getScores} from '../services/api'
+export default function Leaderboard(){const[scores,setScores]=useState([]);const[error,setError]=useState(false);useEffect(()=>{getScores().then(setScores).catch(()=>setError(true))},[]);return <main className="screen center"><section className="panel leaderboard"><p className="eyebrow">GLOBAL RANKING</p><h1>Leaderboard</h1>{error&&<p className="muted">JSON Server no está disponible todavía.</p>}{!error&&!scores.length&&<p className="muted">Aún no hay partidas guardadas.</p>}{scores.slice(0,10).map((s,i)=><LeaderboardRow key={s.id||i} position={i+1} score={s}/>)}<Button to="/">Volver al inicio</Button></section></main>}
