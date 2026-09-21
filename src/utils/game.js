@@ -97,3 +97,6 @@ export function moveEnemies(enemies, player, level, wallSet) {
 
   return { enemies: nextEnemies, playerHit }
 }
+export function getAdjacentCell(cell, direction) {
+  return moveCell(cell, direction)
+}
