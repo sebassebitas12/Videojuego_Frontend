@@ -1,0 +1,2 @@
+import { Link } from 'react-router-dom'
+export default function Button({children,to,type='button',onClick}){return to?<Link className="button" to={to}>{children}</Link>:<button className="button" type={type} onClick={onClick}>{children}</button>}
