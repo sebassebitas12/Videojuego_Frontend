@@ -7,7 +7,7 @@ import { fallbackLevel } from '../data/fallbackLevel'
 import useGameLoop from '../hooks/useGameLoop'
 import useKeyboard from '../hooks/useKeyboard'
 import { getLevel } from '../services/api'
-import { KEY_TO_DIRECTION, canEnterCell, calculateScore, cellId, getAdjacentCell, moveCell, moveEnemies, sameCell } from '../utils/game'
+import { KEY_TO_DIRECTION, canEnterCell, calculateScore, cellId, getAdjacentCell, getOppositeDirection, moveCell, moveEnemies, sameCell } from '../utils/game'
 
 const INITIAL_LIVES = 3
 
@@ -29,7 +29,7 @@ export default function Game() {
   const gameRef = useRef(game)
   const endedRef = useRef(false)
   const moveCooldownRef = useRef(0)
-  const enemyTimerRef = useRef(0)
+  const enemyTimerRef = useRef(1.1)
   const damageCooldownRef = useRef(0)
   const attackTimerRef = useRef(null)
   const alias = sessionStorage.getItem('playerAlias') || 'Ashen'
@@ -52,7 +52,7 @@ export default function Game() {
       gameRef.current = nextGame
       setGame(nextGame)
       moveCooldownRef.current = 0
-      enemyTimerRef.current = 0
+      enemyTimerRef.current = 1.1
       damageCooldownRef.current = 0
       setLoading(false)
     }
@@ -91,12 +91,29 @@ export default function Game() {
     navigate('/results/' + run.runId)
   }, [alias, level, navigate])
 
-  const damage = useCallback(() => {
+  const damage = useCallback((hitDirection) => {
     const now = performance.now()
     if (now < damageCooldownRef.current) return
-    damageCooldownRef.current = now + 900
-    updateGame((previous) => ({ ...previous, lives: Math.max(0, previous.lives - 1) }))
-  }, [updateGame])
+
+    damageCooldownRef.current = now + 1100
+
+    updateGame((previous) => {
+      const knockbackDirection = getOppositeDirection(hitDirection)
+      const pushedPlayer = knockbackDirection
+        ? moveCell(previous.player, knockbackDirection)
+        : previous.player
+      const canKnockback = canEnterCell(pushedPlayer, level, wallSet)
+
+      return {
+        ...previous,
+        lives: Math.max(0, previous.lives - 1),
+        player: {
+          ...previous.player,
+          ...(canKnockback ? pushedPlayer : {}),
+        },
+      }
+    })
+  }, [level, updateGame, wallSet])
 
   const movePlayer = useCallback((direction) => {
     if (endedRef.current || loading) return
@@ -108,7 +125,7 @@ export default function Game() {
     }
     if (current.enemies.some((enemy) => sameCell(enemy, next))) {
       updateGame((previous) => ({ ...previous, player: { ...previous.player, direction } }))
-      damage()
+      damage('player-contact')
       return
     }
     updateGame((previous) => ({
@@ -161,10 +178,10 @@ export default function Game() {
 
     enemyTimerRef.current -= delta
     if (enemyTimerRef.current <= 0) {
-      enemyTimerRef.current = 0.72
+      enemyTimerRef.current = 1.05
       const state = gameRef.current
       const result = moveEnemies(state.enemies, state.player, level, wallSet)
-      if (result.playerHit) damage()
+      if (result.playerHit) damage(result.playerHitDirection)
       updateGame((previous) => ({ ...previous, enemies: result.enemies }))
     }
 
