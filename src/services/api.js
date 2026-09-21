@@ -1,0 +1,4 @@
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+export async function getLevel(id){const r=await fetch(API_BASE_URL+'/levels/'+id);if(!r.ok)throw new Error('No se pudo cargar el nivel.');return r.json()}
+export async function getScores(){const r=await fetch(API_BASE_URL+'/scores?_sort=-score');if(!r.ok)throw new Error('No se pudo cargar el leaderboard.');return r.json()}
+export async function createScore(score){const r=await fetch(API_BASE_URL+'/scores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(score)});if(!r.ok)throw new Error('No se pudo guardar el resultado.');return r.json()}
