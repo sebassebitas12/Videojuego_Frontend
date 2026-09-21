@@ -1,98 +1,50 @@
-# NEXUS BREAK // Signal Protocol
+# Realm of Ashes - Dungeon Run
 
-Videojuego frontend para el Quiz #5 de Desarrollo Web — Frontend. El proyecto combina React, Vite, JavaScript/JSX, React Router, consumo REST mediante json-server y una automatización n8n conectada al cierre de cada partida.
+## Base implementada
 
-## Concepto
+La rama principal contiene una base React + Vite + JavaScript/JSX para el minijuego.
 
-NEXUS BREAK es un quiz arcade de 8 rondas. El jugador introduce un alias, elige un protocolo de juego y responde preguntas bajo presión de tiempo. Las respuestas correctas generan puntuación base, bonus por racha y bonus por tiempo restante. Al terminar, la ejecución se guarda en db.json mediante POST y el frontend envía el resultado a un webhook n8n.
+### Rutas
+- / - inicio y alias
+- /game/:level - dungeon dinámico
+- /results/:runId - resultado dinámico
+- /leaderboard - ranking
 
-## Stack
+### Componentes
+Button, HUD, Entity y LeaderboardRow.
 
-- React + JSX
-- Vite
-- JavaScript
-- React Router
-- ESLint flat config
-- json-server
-- n8n Webhook
-
-## Rutas
-
-- / — Arena e identificación del jugador
-- /play/:mode — Partida; :mode es un parámetro dinámico
-- /results/:runId — Resultado persistido de una partida
-- /leaderboard — Ranking consultado desde la API
-- * — Ruta 404
-
-## API local
-
-Instala dependencias y ejecuta el API:
-
-```bash
-npm install
-npm run server
-```
-
-La API queda disponible en http://localhost:3000.
-
-Recursos principales:
-
-- GET /questions?mode=rapid
-- GET /questions?mode=precision
-- GET /scores/:id
-- GET /scores?_sort=-score&_per_page=10
+### API
+json-server:
+- GET /levels/:id
+- GET /scores
 - POST /scores
 
-El código normaliza tanto respuestas de colecciones en forma de arreglo como respuestas paginadas de json-server v1.
+### Referencias
+Se documentan como inspiración conceptual:
+- Matthew-SA/zelda-js
+- LakshyaSharma207/js-game
+- thepeted/dungeon-crawler
 
-## Frontend
+No se copia código de esos proyectos.
 
-En otra terminal:
+### Score
+score = tiempo_restante * 10 + enemigos_derrotados * 100 - daño_recibido * 50
 
-```bash
+## Probar
+
+Frontend solamente:
+npm install
 npm run dev
-```
 
-## Variables de entorno
+Para API y leaderboard persistente, en otra terminal:
+npm run server
 
-Copia .env.example como .env y ajusta las URLs:
+Luego:
+http://localhost:5173
 
-```env
-VITE_API_BASE_URL=http://localhost:3000
-VITE_N8N_WEBHOOK_URL=http://localhost:5678/webhook/game-complete
-```
-
-## n8n
-
-El workflow definitivo debe usar:
-
-Webhook POST → Validación/normalización → IF/Switch → Acción final → Respond to Webhook
-
-El frontend envía el evento game.completed desde src/services/n8n.js. El archivo n8n/workflow-game-complete.json es un placeholder y debe reemplazarse por el export real de n8n una vez configurado.
-
-## Lint y build
-
-```bash
-npm run lint
-npm run build
-```
-
-## Estructura
-
-```text
-src/
-  app/
-  components/
-  data/
-  hooks/
-  pages/
-  services/
-  App.jsx
-  index.css
-  main.jsx
-db.json
-n8n/
-.env.example
-eslint.config.js
-vite.config.js
-```
+## Siguiente fase
+1. Validar la base.
+2. Mejorar colisiones y game loop con requestAnimationFrame/useRef.
+3. Completar persistencia.
+4. Integrar n8n.
+5. Añadir arte/audio y pulido visual.
