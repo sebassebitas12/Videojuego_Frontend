@@ -16,6 +16,13 @@ export const KEY_TO_DIRECTION = {
   arrowright: 'right',
 }
 
+const OPPOSITE_DIRECTIONS = {
+  up: 'down',
+  down: 'up',
+  left: 'right',
+  right: 'left',
+}
+
 export function sameCell(first, second) {
   return first.x === second.x && first.y === second.y
 }
@@ -35,6 +42,10 @@ export function canEnterCell(cell, level, wallSet) {
 export function moveCell(cell, direction) {
   const offset = DIRECTIONS[direction]
   return { x: cell.x + offset.x, y: cell.y + offset.y }
+}
+
+export function getOppositeDirection(direction) {
+  return OPPOSITE_DIRECTIONS[direction]
 }
 
 export function calculateScore(timeRemaining, enemiesDefeated, damageReceived) {
@@ -67,10 +78,10 @@ export function getChaseDirections(enemy, player) {
 export function moveEnemies(enemies, player, level, wallSet) {
   const occupied = new Set(enemies.map(cellId))
   let playerHit = false
+  let playerHitDirection = null
 
   const nextEnemies = enemies.map((enemy) => {
     const directions = getChaseDirections(enemy, player)
-
     occupied.delete(cellId(enemy))
 
     for (const direction of directions) {
@@ -80,6 +91,7 @@ export function moveEnemies(enemies, player, level, wallSet) {
 
       if (sameCell(candidate, player)) {
         playerHit = true
+        playerHitDirection ||= direction
         occupied.add(cellId(enemy))
         return enemy
       }
@@ -95,8 +107,9 @@ export function moveEnemies(enemies, player, level, wallSet) {
     return enemy
   })
 
-  return { enemies: nextEnemies, playerHit }
+  return { enemies: nextEnemies, playerHit, playerHitDirection }
 }
+
 export function getAdjacentCell(cell, direction) {
   return moveCell(cell, direction)
 }
