@@ -1,0 +1,1 @@
+export default function LeaderboardRow({position,score}){return <div className="leaderboard-row"><span>#{position}</span><strong>{score.alias}</strong><span>{score.score} pts</span></div>}
