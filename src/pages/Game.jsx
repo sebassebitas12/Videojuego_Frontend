@@ -8,22 +8,20 @@ import useGameLoop from '../hooks/useGameLoop'
 import useKeyboard from '../hooks/useKeyboard'
 import { getLevel } from '../services/api'
 
-// Dimensiones de colisión del Entrenador
-const PLAYER_WIDTH = 34
-const PLAYER_HEIGHT = 40
-const MOVE_SPEED = 240
-const JUMP_SPEED = -540
+// Dimensiones de colisión calibradas exactamente con los sprites (virtual 540p)
+const PLAYER_WIDTH = 36
+const PLAYER_HEIGHT = 48
+const MOVE_SPEED = 250
+const JUMP_SPEED = -520
 const GRAVITY = 1260
 const CAMERA_WIDTH = 960
 
-/**
- * Función pura que inicializa el estado del juego para un nivel determinado.
- * Cumple con el criterio 2.2 de la rúbrica (no mutación directa de estado).
- */
 function createGame(level) {
   return {
     player: {
       ...level.player,
+      width: PLAYER_WIDTH,
+      height: PLAYER_HEIGHT,
       vx: 0,
       vy: 0,
       direction: 'right',
@@ -33,21 +31,22 @@ function createGame(level) {
     },
     enemies: level.enemies.map((enemy) => ({
       ...enemy,
-      width: enemy.type === 'zubat' ? 38 : enemy.type === 'pidgey' ? 36 : 34,
-      height: enemy.type === 'zubat' ? 30 : enemy.type === 'pidgey' ? 28 : 26,
+      width: enemy.width || (enemy.type === 'zubat' ? 46 : enemy.type === 'pidgey' ? 42 : 44),
+      height: enemy.height || (enemy.type === 'zubat' ? 34 : enemy.type === 'pidgey' ? 36 : 32),
       initialY: enemy.y,
-      flightTimer: Math.random() * 10,
+      flightTimer: Math.random() * 5,
     })),
-    collectibles: level.collectibles.map((item) => ({ ...item })),
+    collectibles: level.collectibles.map((item) => ({
+      ...item,
+      width: item.width || 28,
+      height: item.height || 28,
+    })),
     lives: 3,
     time: level.timeLimit,
     cameraX: 0,
   }
 }
 
-/**
- * Detección de colisión AABB entre dos cajas rectangulares
- */
 function overlaps(first, second) {
   return (
     first.x < second.x + second.width &&
@@ -62,18 +61,15 @@ export default function Game() {
   const navigate = useNavigate()
   const { keysRef, consumePressed, pressKey, releaseKey } = useKeyboard()
 
-  // [HOOK 1: useState] - Manejo del estado del juego, nivel, carga y fuente de datos
   const [level, setLevel] = useState(fallbackLevel)
   const [game, setGame] = useState(() => createGame(fallbackLevel))
   const [loading, setLoading] = useState(true)
   const [apiSource, setApiSource] = useState('loading')
   const [feedbackMsg, setFeedbackMsg] = useState('')
 
-  // [HOOK 2: useRef] - Para persistencia del estado en el game loop sin re-renders excesivos
   const gameRef = useRef(game)
   const endedRef = useRef(false)
 
-  // [HOOK 3: useEffect] - Efecto secundario para cargar datos del nivel dinámico (/game/:level)
   useEffect(() => {
     let active = true
     const levelId = Number(levelParam) || 1
@@ -95,14 +91,12 @@ export default function Game() {
     }
   }, [levelParam])
 
-  // [HOOK 4: useCallback] - Actualización inmutable del juego
   const updateGame = useCallback((updater) => {
     const next = typeof updater === 'function' ? updater(gameRef.current) : updater
     gameRef.current = next
     setGame(next)
   }, [])
 
-  // [HOOK 4: useCallback] - Finalización de la partida y guardado en sesión
   const finish = useCallback(
     (result) => {
       if (endedRef.current) return
@@ -113,7 +107,7 @@ export default function Game() {
 
       const run = {
         runId: crypto.randomUUID(),
-        alias: sessionStorage.getItem('playerAlias') || 'Ash',
+        alias: sessionStorage.getItem('playerAlias') || 'Ash Ketchum',
         score: Math.max(0, Math.round(current.time * 10 + collected * 150 - damage * 50)),
         time: Math.ceil(current.time),
         result,
@@ -131,21 +125,18 @@ export default function Game() {
     [level, navigate]
   )
 
-  // Mensaje flotante temporal de feedback
   const showFeedback = useCallback((msg) => {
     setFeedbackMsg(msg)
     window.clearTimeout(window.__fbTimeout)
     window.__fbTimeout = window.setTimeout(() => setFeedbackMsg(''), 1500)
   }, [])
 
-  // [HOOK 4: useCallback] - Game loop central de físicas y colisiones
   const tick = useCallback(
     (delta) => {
       if (loading || endedRef.current) return
       const current = gameRef.current
       const pressed = consumePressed()
 
-      // Lectura de teclado
       const left = keysRef.current.has('a') || keysRef.current.has('arrowleft')
       const right = keysRef.current.has('d') || keysRef.current.has('arrowright')
       const jump = pressed.has('w') || pressed.has('arrowup') || pressed.has(' ')
@@ -153,7 +144,6 @@ export default function Game() {
       const direction = left ? 'left' : right ? 'right' : current.player.direction
       const horizontal = left ? -MOVE_SPEED : right ? MOVE_SPEED : 0
 
-      // Físicas del Entrenador
       const hurtTimer = Math.max(0, current.player.hurtTimer - delta)
       const isHurt = hurtTimer > 0
 
@@ -166,7 +156,7 @@ export default function Game() {
         isHurt,
       }
 
-      // Salto si está en el suelo
+      // Salto del jugador
       if (jump && current.player.grounded) {
         player.vy = JUMP_SPEED
       }
@@ -174,7 +164,7 @@ export default function Game() {
       // Movimiento horizontal con límites del mapa
       player.x = Math.max(0, Math.min(level.width - PLAYER_WIDTH, player.x + player.vx * delta))
 
-      // Movimiento vertical y detección de aterrizaje en plataformas
+      // Movimiento vertical y aterrizaje en plataformas
       const previousBottom = player.y + PLAYER_HEIGHT
       player.y += player.vy * delta
       player.grounded = false
@@ -182,7 +172,7 @@ export default function Game() {
       for (const platform of level.platforms) {
         const landing =
           player.vy >= 0 &&
-          previousBottom <= platform.y + 4 &&
+          previousBottom <= platform.y + 6 &&
           player.y + PLAYER_HEIGHT >= platform.y &&
           player.x + PLAYER_WIDTH > platform.x &&
           player.x < platform.x + platform.width
@@ -201,7 +191,7 @@ export default function Game() {
       // Movimiento e interacción de enemigos Pokémon
       const enemies = current.enemies
         .map((enemy) => {
-          let nextX = enemy.x + enemy.direction * (enemy.isFlying ? 60 : 45) * delta
+          let nextX = enemy.x + enemy.direction * (enemy.isFlying ? 55 : 45) * delta
           const minX = enemy.minX || 100
           const maxX = enemy.maxX || level.width - 100
 
@@ -214,11 +204,10 @@ export default function Game() {
             nextDirection = -1
           }
 
-          // Movimiento ondulante de vuelo para Pidgey y Zubat
           let nextY = enemy.y
           let flightTimer = (enemy.flightTimer || 0) + delta
           if (enemy.isFlying) {
-            nextY = enemy.initialY + Math.sin(flightTimer * 3.5) * 16
+            nextY = enemy.initialY + Math.sin(flightTimer * 3.2) * 14
           }
 
           const nextEnemy = {
@@ -229,20 +218,18 @@ export default function Game() {
             flightTimer,
           }
 
-          // Colisión jugador vs enemigo Pokémon
+          // Detección de colisión con enemigos
           if (!isHurt && overlaps(playerBox, { ...nextEnemy, width: nextEnemy.width, height: nextEnemy.height })) {
-            // Si el jugador cae desde arriba sobre el Pokémon enemigo -> ¡Lo derrota!
             const hitFromAbove = player.vy > 0 && player.y + PLAYER_HEIGHT - nextEnemy.y < 22
             if (hitFromAbove) {
               defeated.add(enemy.id)
-              player.vy = JUMP_SPEED * 0.58
+              player.vy = JUMP_SPEED * 0.6
               showFeedback(`¡${(enemy.type || 'Rattata').toUpperCase()} derrotado! +50 pts`)
             } else {
-              // Si no, el jugador recibe daño
               lives -= 1
               player.hurtTimer = 1.2
-              player.vy = -200
-              player.vx = enemy.direction * 150
+              player.vy = -220
+              player.vx = enemy.direction * 160
               showFeedback('¡Daño recibido! -1 Vida')
             }
           }
@@ -263,7 +250,6 @@ export default function Game() {
         showFeedback('¡Poké Ball obtenida! 🔴')
       }
 
-      // Cuenta regresiva del tiempo
       const nextTime = Math.max(0, current.time - delta)
       const cameraX = Math.max(0, Math.min(level.width - CAMERA_WIDTH, player.x - CAMERA_WIDTH * 0.42))
 
@@ -277,7 +263,6 @@ export default function Game() {
         cameraX,
       })
 
-      // Condiciones de derrota y victoria
       if (lives <= 0 || player.y > level.height + 60 || nextTime <= 0) {
         finish('defeat')
       } else if (player.x + PLAYER_WIDTH >= level.goal.x && collectibles.length === 0) {
@@ -287,10 +272,8 @@ export default function Game() {
     [consumePressed, finish, keysRef, level, loading, showFeedback, updateGame]
   )
 
-  // [HOOK: useGameLoop] - Loop sincronizado con requestAnimationFrame
   useGameLoop(!loading, tick)
 
-  // [HOOK 5: useMemo] - Cálculo de métricas del HUD memoizadas
   const collectedCount = useMemo(
     () => level.collectibles.length - game.collectibles.length,
     [level.collectibles.length, game.collectibles.length]
@@ -308,7 +291,7 @@ export default function Game() {
           <div className="loading-pokeball" />
           <p className="eyebrow">CARGANDO RUTA</p>
           <h1>Preparando la expedición...</h1>
-          <p className="muted">Cargando datos del nivel y preparando a los Pokémon salvajes.</p>
+          <p className="muted">Cargando datos del mapa y posicionando entidades.</p>
         </section>
       </main>
     )
@@ -318,13 +301,12 @@ export default function Game() {
     <main className="screen game-screen platformer-screen">
       {apiSource === 'fallback' && (
         <div className="api-notice">
-          ℹ️ Modo local activo: Jugando con la configuración integrada (JSON Server opcional).
+          ℹ️ Modo local activo: Jugando con la configuración integrada (JSON Server disponible con npm run server).
         </div>
       )}
 
       {feedbackMsg && <div className="game-toast-feedback">{feedbackMsg}</div>}
 
-      {/* Marcador del Entrenador (HUD) */}
       <HUD
         alias={sessionStorage.getItem('playerAlias') || 'Ash Ketchum'}
         lives={game.lives}
@@ -351,7 +333,6 @@ export default function Game() {
           />
         </div>
 
-        {/* Barra lateral de información y misión */}
         <aside className="game-sidebar">
           <section className="side-card mission-card">
             <p className="eyebrow">MISIÓN ACTUAL</p>

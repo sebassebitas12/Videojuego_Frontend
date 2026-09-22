@@ -1,8 +1,9 @@
 import React from 'react'
 
 /**
- * Componente TrainerSprite: Renderiza al Entrenador Pokémon (Red / Ash Ketchum)
- * con gorra oficial de la Liga Añil, chaqueta, mochila y animaciones de carrera y salto.
+ * Componente TrainerSprite: Renderiza fielmente a Ash Ketchum / Red
+ * con su icónica gorra de la Liga Añil, chaqueta roja y blanca, chaleco,
+ * guantes verdes, cabello con picos y zapatillas de entrenador.
  */
 export default function TrainerSprite({ direction = 'right', isMoving = false, isJumping = false, isHurt = false }) {
   return (
@@ -10,111 +11,122 @@ export default function TrainerSprite({ direction = 'right', isMoving = false, i
       className={`trainer-character ${direction === 'left' ? 'facing-left' : 'facing-right'} ${isMoving ? 'is-running' : 'is-idle'} ${isJumping ? 'is-jumping' : ''} ${isHurt ? 'is-hurt' : ''}`}
       aria-label="Entrenador Pokémon"
     >
-      <svg viewBox="0 0 40 46" className="trainer-svg" width="100%" height="100%">
+      <svg viewBox="0 0 36 48" className="trainer-svg" width="100%" height="100%">
         <defs>
-          <linearGradient id="capGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#ff4d4d" />
-            <stop offset="100%" stopColor="#c71b1b" />
+          <linearGradient id="trainerCapRed" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" />
           </linearGradient>
-          <linearGradient id="jacketGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#e53935" />
-            <stop offset="100%" stopColor="#b71c1c" />
+          <linearGradient id="trainerJacket" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#dc2626" />
+            <stop offset="100%" stopColor="#991b1b" />
           </linearGradient>
-          <linearGradient id="shirtGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#212121" />
-            <stop offset="100%" stopColor="#111111" />
+          <linearGradient id="trainerJeans" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1e3a8a" />
           </linearGradient>
-          <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ffdbac" />
-            <stop offset="100%" stopColor="#f1c27d" />
-          </linearGradient>
-          <linearGradient id="jeansGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e3c72" />
-            <stop offset="100%" stopColor="#152642" />
+          <linearGradient id="trainerSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fed7aa" />
+            <stop offset="100%" stopColor="#fdba74" />
           </linearGradient>
         </defs>
 
         {/* Sombra de suelo */}
-        <ellipse cx="20" cy="44" rx="13" ry="2.5" fill="rgba(0, 0, 0, 0.35)" />
+        <ellipse cx="18" cy="46.5" rx="13" ry="2" fill="rgba(0, 0, 0, 0.4)" />
 
-        {/* Mochila de viajero */}
+        {/* Mochila de viajero (verde con correas amarillas) */}
         <g className="trainer-backpack">
-          <rect x="5" y="19" width="7" height="13" rx="3" fill="#2e7d32" stroke="#1b5e20" strokeWidth="1" />
-          <rect x="5.5" y="24" width="6" height="2" fill="#ffb300" />
+          <rect x="5" y="19" width="7" height="15" rx="3.5" fill="#15803d" stroke="#14532d" strokeWidth="1" />
+          <rect x="5.5" y="24" width="6" height="3" rx="1" fill="#facc15" />
+          <path d="M 8 19 Q 12 17 14 20" stroke="#166534" strokeWidth="1.2" fill="none" />
         </g>
 
-        {/* Pierna trasera (izquierda) */}
+        {/* Pierna trasera / izquierda */}
         <g className="leg leg-left">
-          <rect x="13" y="29" width="5.5" height="10" rx="2" fill="url(#jeansGrad)" stroke="#0d1b2a" strokeWidth="0.8" />
-          {/* Zapato */}
-          <path d="M 12 39 L 19 39 L 19 43 L 11 43 Z" fill="#ffffff" stroke="#c71b1b" strokeWidth="1" />
-          <rect x="11" y="42" width="8" height="1.5" fill="#c71b1b" />
+          {/* Pantalón azul jean */}
+          <rect x="11.5" y="29" width="5.5" height="12" rx="2" fill="url(#trainerJeans)" stroke="#172554" strokeWidth="0.8" />
+          {/* Zapatilla deportiva blanca y roja */}
+          <path d="M 10 41 L 18 41 L 18.5 45.5 L 9 45.5 Z" fill="#f8fafc" stroke="#b91c1c" strokeWidth="1" />
+          <rect x="9.5" y="44" width="9" height="1.8" fill="#ef4444" rx="0.5" />
         </g>
 
-        {/* Pierna delantera (derecha) */}
+        {/* Pierna delantera / derecha */}
         <g className="leg leg-right">
-          <rect x="21" y="29" width="5.5" height="10" rx="2" fill="url(#jeansGrad)" stroke="#0d1b2a" strokeWidth="0.8" />
-          {/* Zapato */}
-          <path d="M 21 39 L 28 39 L 29 43 L 20 43 Z" fill="#ffffff" stroke="#c71b1b" strokeWidth="1" />
-          <rect x="20" y="42" width="9" height="1.5" fill="#c71b1b" />
+          {/* Pantalón azul jean */}
+          <rect x="19" y="29" width="5.5" height="12" rx="2" fill="url(#trainerJeans)" stroke="#172554" strokeWidth="0.8" />
+          {/* Zapatilla deportiva blanca y roja */}
+          <path d="M 19 41 L 27 41 L 28 45.5 L 18 45.5 Z" fill="#f8fafc" stroke="#b91c1c" strokeWidth="1" />
+          <rect x="18" y="44" width="10" height="1.8" fill="#ef4444" rx="0.5" />
         </g>
 
-        {/* Torso / Chaqueta roja de Ash/Red con camiseta interior */}
+        {/* Torso: Chaqueta roja de Ash con mangas blancas y chaleco azul/negro */}
         <g className="torso">
           {/* Chaqueta base */}
-          <rect x="12" y="17" width="16" height="13" rx="3" fill="url(#jacketGrad)" stroke="#8e0000" strokeWidth="0.8" />
-          {/* Camiseta interior negra */}
-          <polygon points="17,17 23,17 22,25 18,25" fill="url(#shirtGrad)" />
-          {/* Cuello de la camiseta */}
-          <path d="M 16 17 Q 20 20 24 17" stroke="#ffffff" strokeWidth="1" fill="none" />
-          {/* Cinturón */}
-          <rect x="12" y="28" width="16" height="2.5" fill="#212121" />
-          <rect x="18" y="28" width="4" height="2.5" fill="#ffd700" />
+          <rect x="11" y="17" width="15" height="13" rx="3" fill="url(#trainerJacket)" stroke="#7f1d1d" strokeWidth="0.8" />
+          
+          {/* Cuello blanco de la camisa */}
+          <polygon points="15,17 22,17 21,21 16,21" fill="#ffffff" />
+          <path d="M 14 17 L 18.5 22 L 23 17" stroke="#334155" strokeWidth="0.8" fill="none" />
+          
+          {/* Chaleco interior azul oscuro */}
+          <path d="M 14 21 L 17 21 L 16.5 28 L 13.5 28 Z" fill="#1e293b" />
+          <path d="M 20 21 L 23 21 L 23.5 28 L 20.5 28 Z" fill="#1e293b" />
+
+          {/* Cinturón negro con hebilla dorada */}
+          <rect x="11" y="27.5" width="15" height="2.5" fill="#0f172a" />
+          <rect x="17" y="27" width="3.5" height="3.5" rx="0.8" fill="#facc15" stroke="#a16207" strokeWidth="0.5" />
         </g>
 
-        {/* Brazo y mano */}
+        {/* Brazo y Guante verde con dedos descubiertos */}
         <g className="arm">
-          <path d="M 24 18 L 28 25 L 25 26 L 22 20 Z" fill="#e53935" />
-          {/* Manga blanca */}
-          <rect x="24" y="22" width="4" height="2" fill="#ffffff" rx="1" />
-          {/* Guantelete verde con dedos descubiertos */}
-          <circle cx="27" cy="27" r="2.5" fill="#2e7d32" />
-          <circle cx="28" cy="28" r="1.2" fill="url(#skinGrad)" />
+          {/* Manga blanca corta */}
+          <rect x="23" y="17.5" width="4.5" height="4" rx="1.5" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.6" />
+          {/* Brazo piel */}
+          <path d="M 24 21.5 L 27.5 26.5 L 25 27.5 L 22.5 22.5 Z" fill="url(#trainerSkin)" />
+          {/* Guantelete verde con borde amarillo */}
+          <circle cx="27" cy="27" r="2.8" fill="#16a34a" stroke="#14532d" strokeWidth="0.6" />
+          <rect x="25.5" y="25.5" width="3" height="1" fill="#facc15" />
+          {/* Dedos descubiertos */}
+          <circle cx="28" cy="28.5" r="1.3" fill="url(#trainerSkin)" />
         </g>
 
-        {/* Cabeza y Pelo */}
+        {/* Cabeza, Pelo Anime y Rostro */}
         <g className="head">
-          {/* Pelo oscuro con picos clásicos de anime */}
-          <path d="M 11 11 L 8 15 L 13 14 L 9 19 L 14 17 L 15 21 L 18 19 L 28 19 L 30 15 L 32 17 L 31 12 Z" fill="#2d1d13" />
+          {/* Pelo oscuro estilo picos de Ash */}
+          <path d="M 10 11 L 7 15 L 12 14 L 8 19 L 13 17 L 14 21 L 17 19 L 28 19 L 30 15 L 32 17 L 31 12 Z" fill="#1c1917" />
           
           {/* Cara */}
-          <rect x="14" y="9" width="13" height="10" rx="4" fill="url(#skinGrad)" />
+          <rect x="13.5" y="8" width="13" height="11" rx="4" fill="url(#trainerSkin)" />
           
-          {/* Ojo grande estilo anime */}
-          <ellipse cx="23" cy="13" rx="1.8" ry="2.3" fill="#1f2937" />
-          <circle cx="23.6" cy="12.2" r="0.8" fill="#ffffff" />
+          {/* Ojo expresivo de anime */}
+          <ellipse cx="22.5" cy="12.5" rx="2" ry="2.6" fill="#0f172a" />
+          <circle cx="23.2" cy="11.5" r="0.9" fill="#ffffff" />
+          <circle cx="22" cy="13.2" r="0.4" fill="#ffffff" />
+          
+          {/* Ceja decidida */}
+          <path d="M 20.5 9.5 L 24.5 10.5" stroke="#1c1917" strokeWidth="1.2" strokeLinecap="round" />
+          
+          {/* Marca de la mejilla (rayitas de rayo de Ash) */}
+          <path d="M 21.5 15 L 24 15 M 22 16 L 23.5 16" stroke="#ea580c" strokeWidth="0.7" strokeLinecap="round" />
           
           {/* Sonrisa audaz */}
-          <path d="M 21 16 Q 23 17.5 25 16" stroke="#b45309" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-          
-          {/* Marca de la mejilla (rayitas clásicas de Ash) */}
-          <path d="M 22 14.8 L 24 14.8" stroke="#f59e0b" strokeWidth="0.6" strokeLinecap="round" />
+          <path d="M 20 14.5 Q 22.5 16.5 24.5 14" stroke="#78350f" strokeWidth="0.9" fill="none" strokeLinecap="round" />
         </g>
 
         {/* Gorra Oficial de la Liga Añil */}
         <g className="cap">
-          {/* Cúpula roja de la gorra */}
-          <path d="M 11 10 C 11 4, 29 4, 29 10 Z" fill="url(#capGrad)" stroke="#b71c1c" strokeWidth="0.8" />
+          {/* Domo rojo */}
+          <path d="M 10 9 C 10 3, 28 3, 28 9 Z" fill="url(#trainerCapRed)" stroke="#991b1b" strokeWidth="0.8" />
           
-          {/* Frente blanca de la gorra */}
-          <path d="M 15 10 C 15 5.5, 27 5.5, 27 10 Z" fill="#ffffff" />
+          {/* Panel frontal blanco clásico */}
+          <path d="M 14 9 C 14 4.5, 26 4.5, 26 9 Z" fill="#f8fafc" />
           
-          {/* Emblema de Poké Ball verde en la gorra */}
-          <path d="M 19 8.5 A 2 2 0 0 1 23 8.5 Z" fill="#00897b" />
-          <circle cx="21" cy="8.5" r="0.7" fill="#ffffff" />
+          {/* Logo verde de la Liga Pokémon de Kanto */}
+          <path d="M 18.5 7.5 A 2 2 0 0 1 22.5 7.5 Z" fill="#059669" />
+          <circle cx="20.5" cy="7.5" r="0.8" fill="#ffffff" />
           
-          {/* Visera de la gorra */}
-          <path d="M 18 10 L 32 10 Q 30 12.5 24 12 L 18 11 Z" fill="#ffffff" stroke="#e0e0e0" strokeWidth="0.6" />
+          {/* Visera blanca de la gorra */}
+          <path d="M 17 9 L 32 8.5 Q 30 11.5 23 11 L 17 10 Z" fill="#ffffff" stroke="#cbd5e1" strokeWidth="0.7" />
         </g>
       </svg>
     </div>
