@@ -15,18 +15,24 @@ export default function Results() {
   const [isN8nOpen, setIsN8nOpen] = useState(false)
 
   useEffect(() => {
-    if (run) {
-      createScore(run)
-        .then((response) => {
-          setSource(response.source || 'api')
-          setSaved(true)
-        })
-        .catch(() => {
-          setSaved(true)
-          setSource('local')
-        })
+    if (!run) return
+    const submitKey = 'submitted-' + (run.runId || runId)
+    if (sessionStorage.getItem(submitKey)) {
+      setSaved(true)
+      return
     }
-  }, [run])
+    sessionStorage.setItem(submitKey, 'true')
+
+    createScore(run)
+      .then((response) => {
+        setSource(response.source || 'api')
+        setSaved(true)
+      })
+      .catch(() => {
+        setSaved(true)
+        setSource('local')
+      })
+  }, [run, runId])
 
   if (!run) {
     return (

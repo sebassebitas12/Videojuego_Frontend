@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import LeaderboardRow from '../components/LeaderboardRow'
-import Button from '../components/Button'
 import { getScores } from '../services/api'
 import { Link } from 'react-router-dom'
 
@@ -8,71 +7,183 @@ export default function Leaderboard() {
   const [scores, setScores] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [selectedLevelFilter, setSelectedLevelFilter] = useState('all')
 
-  useEffect(() => {
-    let active = true
-
+  const fetchScores = () => {
+    setLoading(true)
+    setError(false)
     getScores()
       .then((data) => {
-        if (!active) return
-        // Aseguramos orden descendente por puntuación
-        const sorted = (data || []).sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0))
-        setScores(sorted)
+        setScores(data || [])
         setLoading(false)
       })
       .catch((err) => {
-        if (!active) return
         console.warn('Error al cargar leaderboard:', err)
         setError(true)
         setLoading(false)
       })
+  }
 
-    return () => {
-      active = false
-    }
+  useEffect(() => {
+    fetchScores()
   }, [])
+
+  // Filtrado, deduplicación y ordenamiento memoizado (Rubro 2.2 useMemo)
+  const processedScores = useMemo(() => {
+    // 1. Filtrar pruebas y scores inválidos
+    const validScores = scores.filter((s) => !s.isTest && s.alias && s.score !== undefined)
+
+    // 2. Deduplicar por runId para evitar repeticiones
+    const seenRuns = new Set()
+    const uniqueScores = []
+    for (const item of validScores) {
+      const key = item.runId || `${item.alias}-${item.score}-${item.levelId}`
+      if (!seenRuns.has(key)) {
+        seenRuns.add(key)
+        uniqueScores.push(item)
+      }
+    }
+
+    // 3. Filtrar por nivel si no es 'all'
+    const filtered =
+      selectedLevelFilter === 'all'
+        ? uniqueScores
+        : uniqueScores.filter((s) => String(s.levelId) === String(selectedLevelFilter))
+
+    // 4. Ordenar descendente por puntuación
+    return filtered.sort((a, b) => Number(b.score) - Number(a.score))
+  }, [scores, selectedLevelFilter])
+
+  const top3 = processedScores.slice(0, 3)
 
   return (
     <main className="screen center leaderboard-screen">
       <section className="panel leaderboard-panel">
         <div className="leaderboard-header">
-          <p className="eyebrow">RANKING GLOBAL DE ENTRENADORES</p>
-          <h1>Salón de la Fama</h1>
-          <p className="lead">Las mejores expediciones por las rutas de Kanto registradas en la base de datos.</p>
+          <div className="leaderboard-badge">
+            <span className="eyebrow">LIGA POKÉMON • SALÓN DE LA FAMA</span>
+          </div>
+          <h1>Ranking de Entrenadores</h1>
+          <p className="lead">
+            Las mejores puntuaciones registradas en las rutas de Kanto. Persistido en tiempo real en la base de datos.
+          </p>
         </div>
 
+        {/* Filtros por Ruta / Nivel */}
+        <div className="leaderboard-filters-bar">
+          <div className="filter-buttons-group">
+            <button
+              type="button"
+              className={`filter-tab-btn ${selectedLevelFilter === 'all' ? 'is-active' : ''}`}
+              onClick={() => setSelectedLevelFilter('all')}
+            >
+              🌟 Todas las Rutas
+            </button>
+            <button
+              type="button"
+              className={`filter-tab-btn ${selectedLevelFilter === '1' ? 'is-active' : ''}`}
+              onClick={() => setSelectedLevelFilter('1')}
+            >
+              🌿 Ruta 01
+            </button>
+            <button
+              type="button"
+              className={`filter-tab-btn ${selectedLevelFilter === '2' ? 'is-active' : ''}`}
+              onClick={() => setSelectedLevelFilter('2')}
+            >
+              🌲 Bosque Verde
+            </button>
+            <button
+              type="button"
+              className={`filter-tab-btn ${selectedLevelFilter === '3' ? 'is-active' : ''}`}
+              onClick={() => setSelectedLevelFilter('3')}
+            >
+              🌙 Monte Moon
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="refresh-scores-btn"
+            onClick={fetchScores}
+            title="Actualizar tabla de puntuaciones"
+          >
+            🔄 Actualizar
+          </button>
+        </div>
+
+        {/* Estado de carga */}
         {loading && (
           <div className="leaderboard-loading">
-            <div className="mini-spinner" />
-            <p>Consultando puntuaciones...</p>
+            <div className="mini-pokeball-spinner" />
+            <p>Consultando el Salón de la Fama...</p>
           </div>
         )}
 
+        {/* Notificación de respaldo si el servidor no está disponible */}
         {error && (
           <div className="api-notice error-notice">
-            ⚠️ No se pudo conectar con JSON Server. Mostrando registros almacenados localmente.
+            ⚠️ JSON Server no respondió en el puerto 3000. Mostrando registros locales almacenados.
           </div>
         )}
 
-        {!loading && scores.length === 0 && (
+        {/* Podio visual para el Top 3 */}
+        {!loading && top3.length > 0 && selectedLevelFilter === 'all' && (
+          <div className="leaderboard-podium-section">
+            {/* 2do Lugar */}
+            {top3[1] && (
+              <div className="podium-card podium-silver">
+                <div className="podium-medal">🥈</div>
+                <strong className="podium-name">{top3[1].alias}</strong>
+                <span className="podium-score">{top3[1].score} pts</span>
+                <span className="podium-lvl">Nivel {top3[1].levelId}</span>
+              </div>
+            )}
+
+            {/* 1er Lugar (Centro, más alto) */}
+            {top3[0] && (
+              <div className="podium-card podium-gold">
+                <div className="crown-icon">👑</div>
+                <div className="podium-medal">🥇</div>
+                <strong className="podium-name">{top3[0].alias}</strong>
+                <span className="podium-score">{top3[0].score} pts</span>
+                <span className="podium-lvl">Nivel {top3[0].levelId}</span>
+              </div>
+            )}
+
+            {/* 3er Lugar */}
+            {top3[2] && (
+              <div className="podium-card podium-bronze">
+                <div className="podium-medal">🥉</div>
+                <strong className="podium-name">{top3[2].alias}</strong>
+                <span className="podium-score">{top3[2].score} pts</span>
+                <span className="podium-lvl">Nivel {top3[2].levelId}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mensaje de tabla vacía */}
+        {!loading && processedScores.length === 0 && (
           <div className="empty-scores">
-            <p className="muted">Aún no hay puntuaciones registradas en el Salón de la Fama.</p>
-            <p>¡Sé el primer entrenador en completar una ruta!</p>
+            <p className="muted">No se encontraron puntuaciones para este filtro.</p>
+            <p>¡Completa esta ruta para ser el primero en el ranking!</p>
           </div>
         )}
 
-        {!loading && scores.length > 0 && (
+        {/* Tabla completa de puntuaciones */}
+        {!loading && processedScores.length > 0 && (
           <div className="scores-table-wrap">
             <div className="scores-table-header">
               <span>POS</span>
-              <span>ENTRENADOR</span>
+              <span>ENTRENADOR Y RUTA</span>
               <span>ESTADO</span>
               <span>PUNTOS</span>
             </div>
             <div className="scores-rows-container">
-              {scores.slice(0, 10).map((scoreItem, idx) => (
+              {processedScores.slice(0, 15).map((scoreItem, idx) => (
                 <LeaderboardRow
-                  key={scoreItem.id || `score-${idx}`}
+                  key={scoreItem.id || scoreItem.runId || `row-${idx}`}
                   position={idx + 1}
                   score={scoreItem}
                 />
@@ -81,13 +192,14 @@ export default function Leaderboard() {
           </div>
         )}
 
+        {/* Acciones */}
         <div className="leaderboard-actions">
           <Link to="/" className="button">
             🎮 Jugar una Ruta
           </Link>
-          <Button to="/game/1" className="button-secondary">
-            Ruta 01 Directa
-          </Button>
+          <Link to="/game/1" className="button button-secondary">
+            ⚔️ Desafiar Ruta 01
+          </Link>
         </div>
       </section>
     </main>
