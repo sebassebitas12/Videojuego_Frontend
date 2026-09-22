@@ -1,7 +1,3 @@
-export default function GameControls({onMove,onAttack}) {
-  return <div className="touch-controls">
-    <div className="touch-row"><button type="button" onClick={()=>onMove('up')}>W</button></div>
-    <div className="touch-row"><button type="button" onClick={()=>onMove('left')}>A</button><button type="button" onClick={()=>onMove('down')}>S</button><button type="button" onClick={()=>onMove('right')}>D</button></div>
-    <div className="touch-row"><button type="button" className="attack-button" onClick={onAttack}>SPACE · ATTACK</button></div>
-  </div>
+export default function GameControls({ onMove, onJump }) {
+  return <div className="touch-controls platform-controls"><div className="touch-row"><button type="button" onPointerDown={() => onMove('left', true)} onPointerUp={() => onMove('left', false)} onPointerLeave={() => onMove('left', false)}>◀</button><button type="button" onPointerDown={onJump}>JUMP</button><button type="button" onPointerDown={() => onMove('right', true)} onPointerUp={() => onMove('right', false)} onPointerLeave={() => onMove('right', false)}>▶</button></div></div>
 }

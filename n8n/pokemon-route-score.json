@@ -1,0 +1,91 @@
+{
+  "name": "Pokemon Route Run - Guardar score",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pokemon-route-score",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-score",
+      "name": "Recibir score",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-720, 0],
+      "webhookId": "pokemon-route-score"
+    },
+    {
+      "parameters": {
+        "jsCode": "const score = $json.body ?? $json;\nconst valid = typeof score.alias === 'string' && score.alias.length > 0 && Number(score.score) >= 0 && ['victory', 'defeat'].includes(score.result);\nreturn [{ json: { ...score, score: Number(score.score) || 0, valid } }];"
+      },
+      "id": "validate-score",
+      "name": "Validar score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-480, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [{ "value1": "={{ $json.valid }}", "operation": "isTrue" }]
+        }
+      },
+      "id": "score-condition",
+      "name": "¿Score válido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/scores",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "save-score",
+      "name": "Guardar en JSON Server",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, -120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, message: 'Score guardado', score: $json.score } }}",
+        "options": {}
+      },
+      "id": "respond-success",
+      "name": "Responder guardado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [240, -120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, message: 'Score inválido' } }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-invalid",
+      "name": "Rechazar score",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [0, 120]
+    }
+  ],
+  "connections": {
+    "Recibir score": { "main": [[{ "node": "Validar score", "type": "main", "index": 0 }]] },
+    "Validar score": { "main": [[{ "node": "¿Score válido?", "type": "main", "index": 0 }]] },
+    "¿Score válido?": { "main": [[{ "node": "Guardar en JSON Server", "type": "main", "index": 0 }], [{ "node": "Rechazar score", "type": "main", "index": 0 }]] },
+    "Guardar en JSON Server": { "main": [[{ "node": "Responder guardado", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "pokemon-route-score-v1",
+  "meta": { "templateCredsSetupCompleted": true },
+  "tags": []
+}

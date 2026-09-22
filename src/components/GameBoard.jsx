@@ -1,31 +1,18 @@
-import Entity from './Entity'
-import { cellId } from '../utils/game'
+const CAMERA_WIDTH = 960
 
-export default function GameBoard({ level, player, enemies, hasKey, attackCell, attackVisible }) {
-  const enemyMap = new Map(enemies.map((enemy) => [cellId(enemy), enemy]))
-  const wallSet = new Set(level.walls.map((wall) => cellId(wall)))
-  const exitOpen = hasKey && enemies.length === 0
-
-  return <div className="dungeon-wrap">
-    <div className="dungeon-meta"><span>ROOM 01</span><strong>{level.name}</strong><span>{exitOpen ? 'EXIT READY' : 'PURGE THE ROOM'}</span></div>
-    <div className="dungeon" style={{gridTemplateColumns:'repeat('+level.width+',minmax(0,1fr))'}}>
-      {Array.from({length:level.width*level.height},(_,index)=>{
-        const x=index%level.width
-        const y=Math.floor(index/level.width)
-        const id=x+'-'+y
-        const wall=wallSet.has(id)
-        const enemy=enemyMap.get(id)
-        const playerHere=player.x===x&&player.y===y
-        const keyHere=!hasKey&&level.key.x===x&&level.key.y===y
-        const exitHere=level.exit.x===x&&level.exit.y===y
-        return <div key={id} className={'tile '+(wall?'wall':'')}>
-          {playerHere&&<Entity type="player" direction={player.direction} label="Jugador"/>}
-          {!playerHere&&enemy&&<Entity type="enemy" label="Enemigo"/>}
-          {!playerHere&&!enemy&&keyHere&&<Entity type="key" label="Llave"/>}
-          {!playerHere&&!enemy&&!keyHere&&exitHere&&<Entity type={exitOpen?'exit-open':'exit'} label="Salida"/>}
-          {attackVisible&&attackCell&&attackCell.x===x&&attackCell.y===y&&<span className="attack-mark"/>}
-        </div>
-      })}
+export default function GameBoard({ level, player, enemies, collectibles, cameraX }) {
+  const xPercent = (value) => (value / level.width * 100) + '%'
+  const yPercent = (value) => (value / level.height * 100) + '%'
+  const sceneWidth = level.width / CAMERA_WIDTH * 100 + '%'
+  const cameraOffset = -(cameraX / level.width * 100) + '%'
+  return <div className="platform-wrap"><div className="platform-meta"><span>ROUTE 01</span><strong>{level.name}</strong><span>{collectibles.length ? 'COLLECT THEM ALL' : 'FLAG UNLOCKED'}</span></div><div className="platform-world">
+    <div className="platform-scene" style={{ width: sceneWidth, transform: 'translate3d(' + cameraOffset + ', 0, 0)' }}>
+      <div className="skyline" />
+    {level.platforms.map((platform, index) => <div key={'platform-' + index} className="platform" style={{ left: xPercent(platform.x), top: yPercent(platform.y), width: xPercent(platform.width), height: yPercent(platform.height) }} />)}
+    {collectibles.map((item) => <div key={item.id} className="pokeball" style={{ left: xPercent(item.x), top: yPercent(item.y) }} aria-label="Poké Ball" />)}
+    {enemies.map((enemy) => <div key={enemy.id} className="rattata" style={{ left: xPercent(enemy.x), top: yPercent(enemy.y) }} aria-label="Rattata enemigo"><span /></div>)}
+    <div className="goal-flag" style={{ left: xPercent(level.goal.x), top: yPercent(level.goal.y) }}><span>FLAG</span></div>
+    <div className={'hero-sprite ' + (player.direction === 'left' ? 'face-left' : '')} style={{ left: xPercent(player.x), top: yPercent(player.y) }}><span className="hero-cap" /><span className="hero-body" /><span className="hero-leg one" /><span className="hero-leg two" /></div>
     </div>
-  </div>
+  </div></div>
 }

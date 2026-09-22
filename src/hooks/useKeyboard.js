@@ -38,5 +38,14 @@ export default function useKeyboard() {
     return pressed
   }, [])
 
-  return { keysRef, consumePressed }
+  const pressKey = useCallback((key) => {
+    keysRef.current.add(key)
+    pressedRef.current.add(key)
+  }, [])
+
+  const releaseKey = useCallback((key) => {
+    keysRef.current.delete(key)
+  }, [])
+
+  return { keysRef, consumePressed, pressKey, releaseKey }
 }
